@@ -1,0 +1,6 @@
+/.snapshots
+/config.ini
+/halftrend.py
+/logs
+/plots
+/__pycache__

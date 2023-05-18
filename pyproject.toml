@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "mt5-halftrend"
+version = "0.1.0"
+description = ""
+authors = ["anusornp <anusornp@revolictech.com>"]
+readme = "README.md"
+packages = [{include = "mt5_halftrend"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+metatrader5 = "^5.0.45"
+pandas = "^2.0.1"
+pandas-ta = "^0.3.14b0"
+mplfinance = "^0.12.9b7"
+requests = "^2.30.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
