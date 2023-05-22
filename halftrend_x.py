@@ -20,7 +20,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 bot_name = 'HalfTrend'
-bot_vesion = '1.0.2'
+bot_vesion = '1.0.3'
 
 bot_fullname = f'MT5 {bot_name} version {bot_vesion}'
 

@@ -146,9 +146,9 @@ indicator_config = {
 # alertcondition(sellSignal, title="Alert: HalfTrend Sell", message="HalfTrend Sell")
 
 def nz(value, default):
-	return default if value is None else value
+	return default if pd.isnull(value) else value
 def na(value):
-    return value is None
+    return pd.isnull(value)
 
 def set_config(config):
     global indicator_config

@@ -8,13 +8,15 @@ open forex order by halftrend signal
 - ผู้พัฒนาไม่สามารถรับผิดชอบ ความเสียหายที่เกิดจาก การใช้งาน บัค error หรือ อื่นๆ ได้ ผู้ใช้โปรแกรมต้องยอมรับความเสี่ยงที่เกิดขึ้นเอง โดย ทดลอง ทดสอบ ให้มั่นใจก่อนนำไปใช้ในการลงทุน
 - ผู้พัฒนาไม่อนุญาติให้นำโปรแกรมไปแสวงหาผลประโยชน์จากบุคคลอื่น หากทราบ จะหยุดการพัฒนาและเผยแพร่โปรแกรมโดยทันที
 
+## V1.0.3
+- กำหนดค่า tp,sl เป็นค่า bib หรือเป็นเปอร์เซ็นโดยระบุ % ต่อท้าย เช่น sl = 10%
+
 ## V1.0.1
 - กำหนด tp sl อัตโนมัติ ด้วย fibo (ค่า min max ของแท่งเทียนย้อนหลัง 100 แท่ง)
 - trailing stop - ปรับ sl ตามราคาที่เปลี่ยนแปลง โดยรักษาระยะห่างระหว่าง sl กับ high ให้เท่ากับราคาตอนเปิด position
 - martingale - กำหนดให้เบิ้ล lot ได้ 
     - martingale_factor = 1.0 จะเป็นการ คูณ lot ด้วยจำนวน loss สะสม
     - martingale_factor > 1.0 จะเป็นการ คูณ lot ด้วยจำนวน loss สะสม แบบ exponencial เช่น martingale_factor = 2 คือ 2 ยกกำลัง จำนวน loss สะสม
-- กำหนดค่า tp,sl เป็นค่า bib หรือเป็นเปอร์เซ็นโดยระบุ % ต่อท้าย เช่น sl = 10%
 
 ## config.ini (rename จาก config_sample.ini)
 
@@ -53,11 +55,13 @@ open forex order by halftrend signal
     martingale_mode = on
     martingale_factor = 1.0
     martingale_max = 16
-    ; martingale_factor = 2.0
-    ; martingale_max = 8
+    ;martingale_factor = 2.0
+    ;martingale_max = 8
 
     auto_tpsl = on
-    sl = 0
-    tp = 500
+    sl = 150
+    tp = 300
+    ;sl = 0.7%
+    ;tp = 1.2%
 
     trailing_stop = on
