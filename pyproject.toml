@@ -6,14 +6,19 @@ authors = ["anusornp <anusornp@revolictech.com>"]
 readme = "README.md"
 packages = [{include = "mt5_halftrend"}]
 
+[tool.poetry.scripts]
+build = "poetry run pyinstaller halftrend_x.py --collect-submodules application --onefile --name halftrend"
+
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.12"
 metatrader5 = "^5.0.45"
 pandas = "^2.0.1"
 pandas-ta = "^0.3.14b0"
 mplfinance = "^0.12.9b7"
 requests = "^2.30.0"
 
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^5.11.0"
 
 [build-system]
 requires = ["poetry-core"]

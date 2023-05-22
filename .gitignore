@@ -4,3 +4,5 @@
 /logs
 /plots
 /__pycache__
+/dist
+/build

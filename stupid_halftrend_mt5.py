@@ -330,7 +330,7 @@ async def fetch_ohlcv(exchange, symbol, timeframe, limit=CANDLE_LIMIT, timestamp
             logger.debug(f"fetch_ohlcv {symbol} {timestamp} {last_candle_time} {timestamp-last_candle_time} {ts_adjust_secs} {cal_limit} {limit}")
             
         ohlcv_bars  = mt5.copy_rates_from_pos(symbol, TIMEFRAME_MT5[timeframe], 0, limit)
-        logger.info(f"{symbol}, limit:{limit}, len:{len(ohlcv_bars)}")
+        logger.info(f"{symbol} fetch_ohlcv, limit:{limit}, len:{len(ohlcv_bars)}")
         if len(ohlcv_bars):
             all_candles[symbol] = set_indicator(symbol, ohlcv_bars, config=config)
     except Exception as ex:
@@ -415,45 +415,46 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
             figratio=(8, 7),
             panel_ratios=(8,2,2,2) if showMACDRSI else (4,1),
             addplot=added_plots,
-            # tight_layout=True,
-            # scale_padding={'left': 0.5, 'top': 2.5, 'right': 2.5, 'bottom': 0.75},
             scale_padding={'left': 0.5, 'top': 0.6, 'right': 1.0, 'bottom': 0.5},
             )
         
         fibo_title = ''
 
         if showFibo:
-            fibo_colors = ['red','brown','orange','gold','green','blue','gray','purple','purple','purple']
             logger.debug(f"{symbol} {fiboData}")
-            # fibo_colors.append('g')
-            # fibo_data['fibo_levels'].append(fibo_data['swing_highs'][0])
-            # fibo_colors.append('r')
-            # fibo_data['fibo_levels'].append(fibo_data['swing_lows'][0])
-            # fibo_lines = dict(
-            #     hlines=fiboData['fibo_levels'],
-            #     colors=fibo_colors,
-            #     alpha=0.5,
-            #     linestyle='-.',
-            #     linewidths=1,
-            #     )
-            tpsl_colors = ['g','b','r']
-            tpsl_data = [fiboData['tp'], fiboData['price'], fiboData['sl']]
-            tpsl_lines = dict(
-                hlines=tpsl_data,
-                colors=tpsl_colors,
-                alpha=0.5,
-                linestyle='-.',
-                linewidths=1,
-                )
-            minmax_lines = dict(
-                alines=fiboData['min_max'],
-                colors='black',
-                linestyle='--',
-                linewidths=0.1,
-                )
-            fibo_title = ' fibo-'+fiboData['fibo_type'][0:2]
-            kwargs['hlines']=tpsl_lines
-            kwargs['alines']=minmax_lines
+
+            tpsl_colors = []
+            tpsl_data = []
+            if 'tp' in fiboData.keys():
+                tpsl_colors.append('g')
+                tpsl_data.append(fiboData['tp'])
+            if 'price' in fiboData.keys():
+                tpsl_colors.append('b')
+                tpsl_data.append(fiboData['price'])
+            if 'sl' in fiboData.keys():
+                tpsl_colors.append('r')
+                tpsl_data.append(fiboData['sl'])
+            if len(tpsl_data) > 0:
+                tpsl_lines = dict(
+                    hlines=tpsl_data,
+                    colors=tpsl_colors,
+                    alpha=0.5,
+                    linestyle='-.',
+                    linewidths=1,
+                    )
+                kwargs['hlines']=tpsl_lines
+
+            if 'min_max' in fiboData.keys():
+                minmax_lines = dict(
+                    alines=fiboData['min_max'],
+                    colors='black',
+                    linestyle='--',
+                    linewidths=0.1,
+                    )
+                kwargs['alines']=minmax_lines
+
+            if 'fibo_type' in fiboData.keys():
+                fibo_title = ' fibo-'+fiboData['fibo_type'][0:2]
 
         myrcparams = {'axes.labelsize':10,'xtick.labelsize':8,'ytick.labelsize':8}
         mystyle = mpf.make_mpf_style(base_mpf_style='charles',rc=myrcparams)
@@ -478,22 +479,30 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
         title.set_fontsize(14)
 
         if showFibo:
-            difference = fiboData['difference']
-            fibo_levels = fiboData['fibo_levels']
-            for idx, fibo_val in enumerate(fiboData['fibo_values']):
-                if idx < len(fibo_levels)-1:
-                    ax1.fill_between([0, CANDLE_PLOT] ,fibo_levels[idx],fibo_levels[idx+1],color=fibo_colors[idx],alpha=0.1)
-                ax1.text(0,fibo_levels[idx] + difference * 0.02,f'{fibo_val}({fibo_levels[idx]:.2f})',fontsize=8,color=fibo_colors[idx],horizontalalignment='left')
+            if 'difference' in fiboData.keys():
+                difference = fiboData['difference']
+            else:
+                difference = 0.0
+            if 'fibo_levels' in fiboData.keys():
+                fibo_colors = ['red','brown','orange','gold','green','blue','gray','purple','purple','purple']
+                fibo_levels = fiboData['fibo_levels']
+                for idx, fibo_val in enumerate(fiboData['fibo_values']):
+                    if idx < len(fibo_levels)-1:
+                        ax1.fill_between([0, CANDLE_PLOT] ,fibo_levels[idx],fibo_levels[idx+1],color=fibo_colors[idx],alpha=0.1)
+                    ax1.text(0,fibo_levels[idx] + difference * 0.02,f'{fibo_val}({fibo_levels[idx]:.2f})',fontsize=8,color=fibo_colors[idx],horizontalalignment='left')
 
-            fibo_tp = fiboData['tp']
-            fibo_tp_txt = fiboData['tp_txt']
-            ax1.text(CANDLE_PLOT,fibo_tp - difference * 0.06,fibo_tp_txt,fontsize=8,color='g',horizontalalignment='right')
-            fibo_price = fiboData['price']
-            fibo_price_txt = fiboData['price_txt']
-            ax1.text(CANDLE_PLOT,fibo_price - difference * 0.06,fibo_price_txt,fontsize=8,color='b',horizontalalignment='right')
-            fibo_sl = fiboData['sl']
-            fibo_sl_txt = fiboData['sl_txt']
-            ax1.text(CANDLE_PLOT,fibo_sl - difference * 0.06,fibo_sl_txt,fontsize=8,color='r',horizontalalignment='right')
+            if 'tp' in fiboData.keys():
+                fibo_tp = fiboData['tp']
+                fibo_tp_txt = fiboData['tp_txt']
+                ax1.text(CANDLE_PLOT,fibo_tp - difference * 0.06,fibo_tp_txt,fontsize=8,color='g',horizontalalignment='right')
+            if 'price' in fiboData.keys():
+                fibo_price = fiboData['price']
+                fibo_price_txt = fiboData['price_txt']
+                ax1.text(CANDLE_PLOT,fibo_price - difference * 0.06,fibo_price_txt,fontsize=8,color='b',horizontalalignment='right')
+            if 'sl' in fiboData.keys():
+                fibo_sl = fiboData['sl']
+                fibo_sl_txt = fiboData['sl_txt']
+                ax1.text(CANDLE_PLOT,fibo_sl - difference * 0.06,fibo_sl_txt,fontsize=8,color='r',horizontalalignment='right')
 
         fig.savefig(filename)
 
