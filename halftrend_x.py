@@ -425,7 +425,7 @@ async def trade(symbol, next_ticker):
                 if config.tp > 0:
                     if config.is_tp_percent:
                         tp = round(price_buy + (price_buy * config.tp), symbol_digits)
-                        tp_mode = '%'
+                        tp_mode = '{:.2f}%'.format(config.tp * 100)
                     else:
                         tp = round(price_buy + config.tp * symbol_point, symbol_digits)
                         tp_mode = ''
@@ -434,7 +434,7 @@ async def trade(symbol, next_ticker):
                 if config.sl > 0:
                     if config.is_sl_percent:
                         sl = round(price_buy - (price_buy * config.sl), symbol_digits)
-                        sl_mode = '%'
+                        sl_mode = '{:.2f}%'.format(config.sl * 100)
                     else:
                         sl = round(price_buy - config.sl * symbol_point, symbol_digits)
                         sl_mode = ''
@@ -476,7 +476,7 @@ async def trade(symbol, next_ticker):
                 if config.tp > 0:
                     if config.is_tp_percent:
                         tp = round(price_sell - (price_sell * config.tp), symbol_digits)
-                        tp_mode = '%'
+                        tp_mode = '{:.2f}%'.format(config.tp * 100)
                     else:
                         tp = round(price_sell - config.tp * symbol_point, symbol_digits)
                         tp_mode = ''
@@ -485,7 +485,7 @@ async def trade(symbol, next_ticker):
                 if config.sl > 0:
                     if config.is_sl_percent:
                         sl = round(price_sell + (price_sell * config.sl), symbol_digits)
-                        sl_mode = '%'
+                        sl_mode = '{:.2f}%'.format(config.sl * 100)
                     else:
                         sl = round(price_sell + config.sl * symbol_point, symbol_digits)
                         sl_mode = ''
@@ -529,7 +529,7 @@ async def init_symbol_ohlcv(symbol):
             'price_txt': 'Price: @{}'.format(round(price_entry, symbol_digits)),
         }
         if config.tp > 0:
-            tp_mode = '%' if config.is_tp_percent else ''
+            tp_mode = '{:.2f}%'.format(config.tp * 100) if config.is_tp_percent else ''
             if config.is_tp_percent:
                 tp_price = price_entry * config.tp
             else:
@@ -541,7 +541,7 @@ async def init_symbol_ohlcv(symbol):
             fibo_data['tp'] = tp
             fibo_data['tp_txt'] = 'TP: {} @{}'.format(tp_mode, round(tp, symbol_digits))
         if config.sl > 0:
-            sl_mode = '%' if config.is_sl_percent else ''
+            sl_mode = '{:.2f}%'.format(config.sl * 100) if config.is_sl_percent else ''
             if config.is_sl_percent:
                 sl_price = price_entry * config.sl
             else:
