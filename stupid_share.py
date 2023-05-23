@@ -94,7 +94,7 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
             for idx, fibo_val in enumerate(fibo_values):
                 fibo_level = minimum_price + difference * fibo_val
                 fibo_levels.append(fibo_level)
-                if tp == 0.0 and (entryPrice < fibo_level or idx == len(fibo_values)-1):
+                if tp == 0.0 and entryPrice < fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = minimum_price + difference * fibo_values[tp_fibo]
                     break
@@ -114,7 +114,7 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
             for idx, fibo_val in enumerate(fibo_values):
                 fibo_level = new_minimum_price + difference * fibo_val
                 fibo_levels.append(fibo_level)
-                if tp == 0.0 and (entryPrice < fibo_level or idx == len(fibo_values)-1):
+                if tp == 0.0 and entryPrice < fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = new_minimum_price + difference * fibo_values[tp_fibo]
                     break
@@ -133,7 +133,7 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
             for idx, fibo_val in enumerate(fibo_values):
                 fibo_level = maximum_price - difference * fibo_val
                 fibo_levels.append(fibo_level)
-                if tp == 0.0 and (entryPrice > fibo_level or idx == len(fibo_values)-1):
+                if tp == 0.0 and entryPrice > fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = maximum_price - difference * fibo_values[tp_fibo]
                     break
@@ -153,7 +153,7 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
             for idx, fibo_val in enumerate(fibo_values):
                 fibo_level = new_maximum_price - difference * fibo_val
                 fibo_levels.append(fibo_level)
-                if tp == 0.0 and (entryPrice > fibo_level or idx == len(fibo_values)-1):
+                if tp == 0.0 and entryPrice > fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = new_maximum_price - difference * fibo_values[tp_fibo]
                     break

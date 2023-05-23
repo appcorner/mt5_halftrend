@@ -425,15 +425,15 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
 
             tpsl_colors = []
             tpsl_data = []
-            if 'tp' in fiboData.keys():
+            if 'tp' in fiboData.keys() and fiboData['tp'] > 0:
                 tpsl_colors.append('g')
                 tpsl_data.append(fiboData['tp'])
+            if 'sl' in fiboData.keys() and fiboData['sl'] > 0:
+                tpsl_colors.append('r')
+                tpsl_data.append(fiboData['sl'])
             if 'price' in fiboData.keys():
                 tpsl_colors.append('b')
                 tpsl_data.append(fiboData['price'])
-            if 'sl' in fiboData.keys():
-                tpsl_colors.append('r')
-                tpsl_data.append(fiboData['sl'])
             if len(tpsl_data) > 0:
                 tpsl_lines = dict(
                     hlines=tpsl_data,
@@ -491,18 +491,25 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
                         ax1.fill_between([0, CANDLE_PLOT] ,fibo_levels[idx],fibo_levels[idx+1],color=fibo_colors[idx],alpha=0.1)
                     ax1.text(0,fibo_levels[idx] + difference * 0.02,f'{fibo_val}({fibo_levels[idx]:.2f})',fontsize=8,color=fibo_colors[idx],horizontalalignment='left')
 
-            if 'tp' in fiboData.keys():
+            none_tpsl_txt = []
+            if 'tp' in fiboData.keys() and fiboData['tp'] > 0:
                 fibo_tp = fiboData['tp']
                 fibo_tp_txt = fiboData['tp_txt']
                 ax1.text(CANDLE_PLOT,fibo_tp - difference * 0.06,fibo_tp_txt,fontsize=8,color='g',horizontalalignment='right')
-            if 'price' in fiboData.keys():
-                fibo_price = fiboData['price']
-                fibo_price_txt = fiboData['price_txt']
-                ax1.text(CANDLE_PLOT,fibo_price - difference * 0.06,fibo_price_txt,fontsize=8,color='b',horizontalalignment='right')
-            if 'sl' in fiboData.keys():
+            else:
+                none_tpsl_txt.append('No TP')
+
+            if 'sl' in fiboData.keys() and fiboData['sl'] > 0:
                 fibo_sl = fiboData['sl']
                 fibo_sl_txt = fiboData['sl_txt']
                 ax1.text(CANDLE_PLOT,fibo_sl - difference * 0.06,fibo_sl_txt,fontsize=8,color='r',horizontalalignment='right')
+            else:
+                none_tpsl_txt.append('No SL')
+                
+            if 'price' in fiboData.keys():
+                fibo_price = fiboData['price']
+                fibo_price_txt = fiboData['price_txt'] + (' [' + ','.join(none_tpsl_txt) + ']' if len(none_tpsl_txt) > 0 else '')
+                ax1.text(CANDLE_PLOT,fibo_price - difference * 0.06,fibo_price_txt,fontsize=8,color='b',horizontalalignment='right')
 
         fig.savefig(filename)
 
