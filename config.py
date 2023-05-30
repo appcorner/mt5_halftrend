@@ -114,6 +114,9 @@ atrlen = get_int('setting', 'atrlen', 100)
 amplitude = get_int('setting', 'amplitude', 2)
 channel_deviation = get_int('setting', 'channel_deviation', 2)
 
+is_confirm_macd = get_str('setting', 'confirm_macd', 'on') == 'on'
+is_macd_cross = get_str('setting', 'macd_cross', 'off') == 'on'
+
 is_martingale = get_str('setting', 'martingale_mode', 'off') == 'on'
 martingale_factor = get_float('setting', 'martingale_factor', 2.0)
 martingale_max = get_int('setting', 'martingale_max', 8)
@@ -136,4 +139,5 @@ else:
     is_tp_percent = False
     tp = get_int('setting', 'tp', 1500)
 
+# is_trailing_profit = get_str('setting', 'trailing_profit', 'on') == 'on'
 is_trailing_stop = get_str('setting', 'trailing_stop', 'on') == 'on'

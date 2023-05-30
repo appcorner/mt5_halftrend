@@ -59,6 +59,8 @@ indicator_config = {
     "atrlen": 100,
     "amplitude": 3,
     "channel_deviation": 2,
+    "is_confirm_macd": False,
+    "is_macd_cross": False,
 }
 
 # //@version=4
@@ -341,15 +343,33 @@ async def fetch_ohlcv(exchange, symbol, timeframe, limit=CANDLE_LIMIT, timestamp
         #     watch_list.remove(symbol)
         #     print(f'{symbol} is removed from watch_list')
 
-def get_signal(symbol, idx):
+def get_signal(symbol, idx, config=indicator_config):
     df = all_candles[symbol]
     is_long = False
     is_short = False
     if df['trend'][idx] == 'long' and df['trend'][idx-1] == 'short':
-        is_long = True
+        if "is_confirm_macd" in config.keys() and \
+            config["is_confirm_macd"]:
+            if df['MACDh'][idx] > 0:
+                is_long = True
+        else:
+            is_long = True
     elif df['trend'][idx] == 'short' and df['trend'][idx-1] == 'long':
-        is_short = True
-    return is_long, is_short
+        if "is_confirm_macd" in config.keys() and \
+            config["is_confirm_macd"]:
+            if df['MACDh'][idx] < 0:
+                is_short = True
+        else:
+            is_short = True
+
+    # MACD Cross
+    if "is_macd_cross" in config.keys() and \
+        config["is_macd_cross"]:
+        if df['MACDh'][idx] > 0 and df['MACDh'][idx-1] < 0:
+            is_long = True
+        elif df['MACDh'][idx] < 0 and df['MACDh'][idx-1] > 0:
+            is_short = True
+        return is_long, is_short
 
 async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, fiboData=None):
     filename = f"./plots/order_{str(symbol).lower()}.png"
@@ -371,7 +391,7 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
         for i in range(len(data)):
             long_markers.append(np.nan)
             short_markers.append(np.nan)
-            is_long, is_short = get_signal(symbol, CANDLE_PLOT+i)
+            is_long, is_short = get_signal(symbol, CANDLE_PLOT+i, config)
             if is_long:
                 has_long = True
                 long_markers[i] = data['value'][i] - gap

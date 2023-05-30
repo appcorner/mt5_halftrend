@@ -226,7 +226,7 @@ def close_sell(symbol, position_id, lot, price_open):
     return position_id_close_sell
 
 # Function to modify an open position
-def modify_position(symbol, position_id, new_sl, new_tp, trailing_stop_pips, step=0, magic_number=magic_number):
+def modify_position(symbol, position_id, new_sl, new_tp, magic_number=magic_number):
     # Create the request
     request = {
         "action": mt5.TRADE_ACTION_SLTP,
@@ -258,37 +258,51 @@ def update_trailing_stop(position):
     step = int(comment_info[-1])
     trailing_stop_pips = int(comment_info[-2])
 
-    # Convert trailing_stop_pips into pips
-    trailing_stop_price = trailing_stop_pips * pip_size
-    # Determine if Red or Green
-    # A Green Position will have a take_profit > stop_loss
-    if position['tp'] > position['sl']:
-        # If Green, new_stop_loss = current_price - trailing_stop_price
-        new_stop_loss = position['price_current'] - trailing_stop_price
-        # Test to see if new_stop_loss > current_stop_loss
-        if new_stop_loss > position['sl']:
-            # Create updated values for order
-            position_id = position['ticket']
-            # New take_profit will be the difference between new_stop_loss and old_stop_loss added to take profit
-            new_take_profit = position['tp'] + new_stop_loss - position['sl']
-            logger.debug(f"{symbol} buy :: pip_size={pip_size:.8f} trailing_stop_pips={trailing_stop_pips}")
-            logger.debug(f"{symbol} buy :: {position['sl']:.8f}/{position['tp']:.8f} new sl/tp={new_stop_loss:.8f}/{new_take_profit:.8f}")
-            # Send order to modify_position
-            modify_position(symbol, position_id, round(new_stop_loss, symbol_digits) , round(new_take_profit, symbol_digits), trailing_stop_pips, step)
-    # A Red Position will have a take_profit < stop_loss
-    elif position['tp'] < position['sl']:
-        # If Red, new_stop_loss = current_price + trailing_stop_price
-        new_stop_loss = position['price_current'] + trailing_stop_price
-        # Test to see if new_stop_loss < current_stop_loss
-        if new_stop_loss < position['sl']:
-            # Create updated values for order
-            position_id = position['ticket']
-            # New take_profit will be the difference between new_stop_loss and old_stop_loss subtracted from old take_profit
-            new_take_profit = position['tp'] - new_stop_loss + position['sl']
-            logger.debug(f"{symbol} sell :: pip_size={pip_size:.8f} trailing_stop_pips={trailing_stop_pips}")
-            logger.debug(f"{symbol} sell :: {position['sl']:.8f}/{position['tp']:.8f} new sl/tp={new_stop_loss:.8f}/{new_take_profit:.8f}")
-            # Send order to modify_position
-            modify_position(symbol, position_id, round(new_stop_loss, symbol_digits), round(new_take_profit, symbol_digits), trailing_stop_pips, step)
+    # cal tp sl
+    position_tp = position['tp']
+    position_sl = position['sl']
+    if position_tp == 0.0:
+        fibo_data = cal_tpsl(symbol, stupid_share.Direction.LONG if position['type'] == ORDER_TYPE[0] else stupid_share.Direction.SHORT, position['price_open'])
+        position_tp = fibo_data['tp']
+        position_sl = fibo_data['sl']
+        # Create updated values for order
+        position_id = position['ticket']
+        modify_position(symbol, position_id, round(position_sl, symbol_digits), round(position_tp, symbol_digits))
+    else:
+        # Convert trailing_stop_pips into pips
+        trailing_stop_price = trailing_stop_pips * pip_size
+        # Determine if Red or Green
+        # A Green Position will have a take_profit > stop_loss
+        if position['type'] == ORDER_TYPE[0]:
+            # If Green, new_stop_loss = current_price - trailing_stop_price
+            new_stop_loss = position['price_current'] - trailing_stop_price
+            # Test to see if new_stop_loss > current_stop_loss
+            if new_stop_loss > position_sl:
+                # Create updated values for order
+                position_id = position['ticket']
+                # New take_profit will be the difference between new_stop_loss and old_stop_loss added to take profit
+                # new_take_profit = position['tp'] + new_stop_loss - position['sl']
+                logger.debug(f"{symbol} buy :: pip_size={pip_size:.8f} trailing_stop_pips={trailing_stop_pips}")
+                # logger.debug(f"{symbol} buy :: {position['sl']:.8f}/{position['tp']:.8f} new sl/tp={new_stop_loss:.8f}/{new_take_profit:.8f}")
+                logger.debug(f"{symbol} buy :: {position_sl:.8f}/{position_tp:.8f} new sl={new_stop_loss:.8f}")
+                # Send order to modify_position
+                modify_position(symbol, position_id, round(new_stop_loss, symbol_digits) , round(position_tp, symbol_digits))
+        # A Red Position will have a take_profit < stop_loss
+        elif position['type'] == ORDER_TYPE[1]:
+            # If Red, new_stop_loss = current_price + trailing_stop_price
+            new_stop_loss = position['price_current'] + trailing_stop_price
+            # Test to see if new_stop_loss < current_stop_loss
+            if new_stop_loss < position_sl:
+                # Create updated values for order
+                position_id = position['ticket']
+                # New take_profit will be the difference between new_stop_loss and old_stop_loss subtracted from old take_profit
+                # new_take_profit = position['tp'] - new_stop_loss + position['sl']
+                logger.debug(f"{symbol} sell :: pip_size={pip_size:.8f} trailing_stop_pips={trailing_stop_pips}")
+                # logger.debug(f"{symbol} sell :: {position['sl']:.8f}/{position['tp']:.8f} new sl/tp={new_stop_loss:.8f}/{new_take_profit:.8f}")
+                logger.debug(f"{symbol} sell :: {position_sl:.8f}/{position_tp:.8f} new sl={new_stop_loss:.8f}")
+                # Send order to modify_position
+                modify_position(symbol, position_id, round(new_stop_loss, symbol_digits), round(position_tp, symbol_digits))
+
     
 def show_bid_ask(symbol):
     symbol_tick = mt5.symbol_info_tick(symbol)
@@ -380,6 +394,42 @@ def cal_martingal_lot(symbol):
                 cal_lot = round(config.lot * (config.martingale_factor ** config.martingale_max), 2)
     return cal_lot
 
+def cal_tpsl(symbol, direction:stupid_share.Direction, price_target):
+    symbol_info = mt5.symbol_info(symbol)
+    symbol_digits = symbol_info.digits
+    symbol_point = symbol_info.point
+    tp = 0.0
+    sl = 0.0
+    if config.is_auto_tpsl:
+        fibo_data = stupid_share.cal_minmax_fibo(symbol, stupid_halftrend_mt5.all_candles[symbol], direction, entryPrice=price_target, digits=symbol_digits)
+        tp = fibo_data['tp']
+        sl = fibo_data['sl']
+    else:
+        fibo_data = {
+            'position' : 'BUY' if direction == stupid_share.Direction.LONG else 'SELL',
+            'price': round(price_target, symbol_digits),
+            'price_txt': 'Price: @{}'.format(round(price_target, symbol_digits)),
+        }
+        if config.tp > 0:
+            if config.is_tp_percent:
+                tp = round(price_target + (price_target * config.tp), symbol_digits)
+                tp_mode = '{:.2f}%'.format(config.tp * 100)
+            else:
+                tp = round(price_target + config.tp * symbol_point, symbol_digits)
+                tp_mode = ''
+            fibo_data['tp'] = tp
+            fibo_data['tp_txt'] = 'TP: {} @{}'.format(tp_mode, round(tp, symbol_digits))
+        if config.sl > 0:
+            if config.is_sl_percent:
+                sl = round(price_target - (price_target * config.sl), symbol_digits)
+                sl_mode = '{:.2f}%'.format(config.sl * 100)
+            else:
+                sl = round(price_target - config.sl * symbol_point, symbol_digits)
+                sl_mode = ''
+            fibo_data['sl'] = sl
+            fibo_data['sl_txt'] = 'SL: {} @{}'.format(sl_mode, round(sl, symbol_digits))
+    return fibo_data
+
 async def trade(symbol, next_ticker):
     await stupid_halftrend_mt5.fetch_ohlcv(trade_mt5, symbol, tf, limit=0, timestamp=next_ticker)
     logger.debug(f'{symbol}::\n{stupid_halftrend_mt5.all_candles[symbol].tail(3)}')
@@ -387,115 +437,64 @@ async def trade(symbol, next_ticker):
         is_long, is_short = stupid_halftrend_mt5.get_signal(symbol, config.signal_index)
         logger.info(f'{symbol} :: is_long={is_long}, is_short={is_short}')
 
-        symbol_info = mt5.symbol_info(symbol)
-        symbol_digits = symbol_info.digits
-        symbol_point = symbol_info.point
         fibo_data = None
         msg = ""
         if is_long:
             # close all sell
             all_positions = positions_get(symbol)
+            has_long_position = False
             for index, position in all_positions.iterrows():
-                if position["symbol"] == symbol and position["type"] == ORDER_TYPE[1] and position["magic"] == magic_number:
-                    position_id = close_sell(symbol, position['identifier'], position['volume'], position['price_open'])
-                    all_stat[symbol]["summary_profit"] += position['profit']
-                    if position['profit'] > 0:
-                        all_stat[symbol]["win"] += 1
-                        all_stat[symbol]["last_loss"] = 0
-                        # all_stat[symbol]["martingale_profit"] = 0
-                    else:
-                        all_stat[symbol]["loss"] += 1
-                        all_stat[symbol]["last_loss"] += 1
-                        # all_stat[symbol]["martingale_profit"] += position['profit']
-            # calculate fibo
-            price_buy = mt5.symbol_info_tick(symbol).ask
-            cal_lot = cal_martingal_lot(symbol)
-            tp = 0.0
-            sl = 0.0
-            if config.is_auto_tpsl:
-                fibo_data = stupid_share.cal_minmax_fibo(symbol, stupid_halftrend_mt5.all_candles[symbol], stupid_share.Direction.LONG, entryPrice=price_buy, digits=symbol_digits)
-                tp = fibo_data['tp']
-                sl = fibo_data['sl']
-            else:
-                fibo_data = {
-                    'position' : 'BUY',
-                    'price': round(price_buy, symbol_digits),
-                    'price_txt': 'Price: @{}'.format(round(price_buy, symbol_digits)),
-                }
-                if config.tp > 0:
-                    if config.is_tp_percent:
-                        tp = round(price_buy + (price_buy * config.tp), symbol_digits)
-                        tp_mode = '{:.2f}%'.format(config.tp * 100)
-                    else:
-                        tp = round(price_buy + config.tp * symbol_point, symbol_digits)
-                        tp_mode = ''
-                    fibo_data['tp'] = tp
-                    fibo_data['tp_txt'] = 'TP: {} @{}'.format(tp_mode, round(tp, symbol_digits))
-                if config.sl > 0:
-                    if config.is_sl_percent:
-                        sl = round(price_buy - (price_buy * config.sl), symbol_digits)
-                        sl_mode = '{:.2f}%'.format(config.sl * 100)
-                    else:
-                        sl = round(price_buy - config.sl * symbol_point, symbol_digits)
-                        sl_mode = ''
-                    fibo_data['sl'] = sl
-                    fibo_data['sl_txt'] = 'SL: {} @{}'.format(sl_mode, round(sl, symbol_digits))
-            position_id = trade_buy(symbol, price_buy, lot=cal_lot, tp=tp, sl=sl, step=all_stat[symbol]["last_loss"])
-            msg = f"Signal Long {symbol}\nticker: {position_id}"
-            print(msg)
+                if position["symbol"] == symbol and position["magic"] == magic_number:
+                    if position["type"] == ORDER_TYPE[1]:
+                        position_id = close_sell(symbol, position['identifier'], position['volume'], position['price_open'])
+                        all_stat[symbol]["summary_profit"] += position['profit']
+                        if position['profit'] > 0:
+                            all_stat[symbol]["win"] += 1
+                            all_stat[symbol]["last_loss"] = 0
+                            # all_stat[symbol]["martingale_profit"] = 0
+                        else:
+                            all_stat[symbol]["loss"] += 1
+                            all_stat[symbol]["last_loss"] += 1
+                            # all_stat[symbol]["martingale_profit"] += position['profit']
+                    elif position["type"] == ORDER_TYPE[0]:
+                        has_long_position = True
+            if not has_long_position:
+                # calculate fibo
+                price_buy = mt5.symbol_info_tick(symbol).ask
+                cal_lot = cal_martingal_lot(symbol)
+                fibo_data = cal_tpsl(symbol, stupid_share.Direction.LONG, price_buy)
+                position_id = trade_buy(symbol, price_buy, lot=cal_lot, tp=fibo_data['tp'], sl=fibo_data['sl'], step=all_stat[symbol]["last_loss"])
+                msg = f"Signal Long {symbol}\nticker: {position_id}"
+                print(msg)
         elif is_short:
             # close all buy
             all_positions = positions_get(symbol)
+            has_short_position = False
             for index, position in all_positions.iterrows():
-                if position["symbol"] == symbol and position["type"] == ORDER_TYPE[0] and position["magic"] == magic_number:
-                    position_id = close_buy(symbol, position['identifier'], position['volume'], position['price_open'])
-                    all_stat[symbol]["summary_profit"] += position['profit']
-                    if position['profit'] > 0:
-                        all_stat[symbol]["win"] += 1
-                        all_stat[symbol]["last_loss"] = 0
-                        # all_stat[symbol]["martingale_profit"] = 0
-                    else:
-                        all_stat[symbol]["loss"] += 1
-                        all_stat[symbol]["last_loss"] += 1
-                        # all_stat[symbol]["martingale_profit"] += position['profit']
-            # calculate fibo
-            price_sell = mt5.symbol_info_tick(symbol).bid
-            cal_lot = cal_martingal_lot(symbol)
-            tp = 0.0
-            sl = 0.0
-            if config.is_auto_tpsl:
-                fibo_data = stupid_share.cal_minmax_fibo(symbol, stupid_halftrend_mt5.all_candles[symbol], stupid_share.Direction.SHORT, entryPrice=price_sell, digits=symbol_digits)
-                tp = fibo_data['tp']
-                sl = fibo_data['sl']
-            else:
-                fibo_data = {
-                    'position' : 'SELL',
-                    'price': round(price_sell, symbol_digits),
-                    'price_txt': 'Price: @{}'.format(round(price_sell, symbol_digits)),
-                }
-                if config.tp > 0:
-                    if config.is_tp_percent:
-                        tp = round(price_sell - (price_sell * config.tp), symbol_digits)
-                        tp_mode = '{:.2f}%'.format(config.tp * 100)
-                    else:
-                        tp = round(price_sell - config.tp * symbol_point, symbol_digits)
-                        tp_mode = ''
-                    fibo_data['tp'] = tp
-                    fibo_data['tp_txt'] = 'TP: {} @{}'.format(tp_mode, round(tp, symbol_digits))
-                if config.sl > 0:
-                    if config.is_sl_percent:
-                        sl = round(price_sell + (price_sell * config.sl), symbol_digits)
-                        sl_mode = '{:.2f}%'.format(config.sl * 100)
-                    else:
-                        sl = round(price_sell + config.sl * symbol_point, symbol_digits)
-                        sl_mode = ''
-                    fibo_data['sl'] = sl
-                    fibo_data['sl_txt'] = 'SL: {} @{}'.format(sl_mode, round(sl, symbol_digits))
-            position_id = trade_sell(symbol, price_sell, lot=cal_lot, tp=tp, sl=sl, step=all_stat[symbol]["last_loss"])
-            msg = f"Signal Short {symbol}\nticker: {position_id}"
-            print(msg)
+                if position["symbol"] == symbol and position["magic"] == magic_number:
+                    if position["type"] == ORDER_TYPE[0]:
+                        position_id = close_buy(symbol, position['identifier'], position['volume'], position['price_open'])
+                        all_stat[symbol]["summary_profit"] += position['profit']
+                        if position['profit'] > 0:
+                            all_stat[symbol]["win"] += 1
+                            all_stat[symbol]["last_loss"] = 0
+                            # all_stat[symbol]["martingale_profit"] = 0
+                        else:
+                            all_stat[symbol]["loss"] += 1
+                            all_stat[symbol]["last_loss"] += 1
+                            # all_stat[symbol]["martingale_profit"] += position['profit']
+                    elif position["type"] == ORDER_TYPE[1]:
+                        has_short_position = True
+            if not has_short_position:
+                # calculate fibo
+                price_sell = mt5.symbol_info_tick(symbol).bid
+                cal_lot = cal_martingal_lot(symbol)
+                fibo_data = cal_tpsl(symbol, stupid_share.Direction.SHORT, price_sell)
+                position_id = trade_sell(symbol, price_sell, lot=cal_lot, tp=fibo_data['tp'], sl=fibo_data['sl'], step=all_stat[symbol]["last_loss"])
+                msg = f"Signal Short {symbol}\nticker: {position_id}"
+                print(msg)
 
-        if is_long or is_short:
+        if (is_long and not has_long_position) or (is_short and not has_short_position):
             filename = ''
             if fibo_data:
                 filename = await stupid_halftrend_mt5.chart(symbol, tf, showMACDRSI=True, fiboData=fibo_data)
@@ -588,6 +587,8 @@ async def main():
     indy_config["atrlen"] = config.atrlen
     indy_config["amplitude"] = config.amplitude
     indy_config["channel_deviation"] = config.channel_deviation
+    indy_config["is_confirm_macd"] = config.is_confirm_macd
+    indy_config["is_macd_cross"] = config.is_macd_cross
     logger.debug(indy_config)
     stupid_halftrend_mt5.set_config(indy_config)
 
