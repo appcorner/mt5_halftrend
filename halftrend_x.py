@@ -410,21 +410,22 @@ def cal_tpsl(symbol, direction:stupid_share.Direction, price_target):
             'price': round(price_target, symbol_digits),
             'price_txt': 'Price: @{}'.format(round(price_target, symbol_digits)),
         }
+        direction_multiplier = 1 if direction == stupid_share.Direction.LONG else -1
         if config.tp > 0:
             if config.is_tp_percent:
-                tp = round(price_target + (price_target * config.tp), symbol_digits)
+                tp = round(price_target + (price_target * config.tp * direction_multiplier), symbol_digits)
                 tp_mode = '{:.2f}%'.format(config.tp * 100)
             else:
-                tp = round(price_target + config.tp * symbol_point, symbol_digits)
+                tp = round(price_target + (config.tp * symbol_point * direction_multiplier), symbol_digits)
                 tp_mode = ''
             fibo_data['tp'] = tp
             fibo_data['tp_txt'] = 'TP: {} @{}'.format(tp_mode, round(tp, symbol_digits))
         if config.sl > 0:
             if config.is_sl_percent:
-                sl = round(price_target - (price_target * config.sl), symbol_digits)
+                sl = round(price_target - (price_target * config.sl * direction_multiplier), symbol_digits)
                 sl_mode = '{:.2f}%'.format(config.sl * 100)
             else:
-                sl = round(price_target - config.sl * symbol_point, symbol_digits)
+                sl = round(price_target - (config.sl * symbol_point * direction_multiplier), symbol_digits)
                 sl_mode = ''
             fibo_data['sl'] = sl
             fibo_data['sl_txt'] = 'SL: {} @{}'.format(sl_mode, round(sl, symbol_digits))
