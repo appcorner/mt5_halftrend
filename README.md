@@ -10,6 +10,8 @@ open forex order by halftrend signal
 
 ## V1.0.3
 - กำหนดค่า tp,sl เป็นค่า bib หรือเป็นเปอร์เซ็นโดยระบุ % ต่อท้าย เช่น sl = 10%
+- check สัญญาณ macd ก่อนเปิด order
+- เพิ่มการเปิด order ด้วยสัญญาน macd cross (MACD ตัด MACDs)
 
 ## V1.0.1
 - กำหนด tp sl อัตโนมัติ ด้วย fibo (ค่า min max ของแท่งเทียนย้อนหลัง 100 แท่ง)
@@ -52,15 +54,23 @@ open forex order by halftrend signal
     amplitude = 3
     channel_deviation = 2
 
+    ;check สัญญาณ macd ก่อนเปิด order default = on
+    ; confirm_macd = off
+
+    ;เพิ่มการเปิด order ด้วยสัญญาน macd cross (MACD ตัด MACDs) default = off
+    ; macd_cross = on
+
     martingale_mode = on
     martingale_factor = 1.0
     martingale_max = 16
+    ;ถ้า martingale_factor > 1.0 จะเป็นการเพิ่ม lot ตามเทคนิค martingale (ทวีคูณ)
     ;martingale_factor = 2.0
     ;martingale_max = 8
 
     auto_tpsl = on
     sl = 150
     tp = 300
+    ;สามารถกำหนดค่าเป็นเปอร์เซ็นต์ได้
     ;sl = 0.7%
     ;tp = 1.2%
 
