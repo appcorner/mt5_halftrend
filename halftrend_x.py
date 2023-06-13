@@ -20,7 +20,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 bot_name = 'HalfTrend'
-bot_vesion = '1.0.3'
+bot_vesion = '1.0.4'
 
 bot_fullname = f'MT5 {bot_name} version {bot_vesion}'
 
@@ -576,7 +576,7 @@ async def main():
     if len(symbols_list) == 0:
         print("Empty symbols list")
         mt5.shutdown()
-        quit()
+        exit()
 
     # orders = mt5.orders_total()
     # if orders > 0:
@@ -723,12 +723,14 @@ if __name__ == "__main__":
             # df=pd.DataFrame(account_info_list,columns=['property','value'])#Convert list to data list table
             # print(df)
         else:
-            print("No Connect")
-            quit()
+            print("No Connect: Login Failed")
+            exit()
         
         os.system("color") # enables ansi escape characters in terminal
         print(HIDE_CURSOR, end="")
-        loop = asyncio.get_event_loop()
+        # loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         # แสดง status waiting ระหว่างที่รอ...
         loop.create_task(waiting())
         loop.run_until_complete(main())

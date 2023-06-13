@@ -369,7 +369,8 @@ def get_signal(symbol, idx, config=indicator_config):
             is_long = True
         elif df['MACDh'][idx] < 0 and df['MACDh'][idx-1] > 0:
             is_short = True
-        return is_long, is_short
+
+    return is_long, is_short
 
 async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, fiboData=None):
     filename = f"./plots/order_{str(symbol).lower()}.png"
