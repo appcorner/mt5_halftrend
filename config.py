@@ -93,7 +93,7 @@ LOG_LEVEL = get_int('app_config', 'LOG_LEVEL', 20)
 UB_TIMER_MODE = get_int('app_config', 'UB_TIMER_MODE', 2)
 if UB_TIMER_MODE < 0 or UB_TIMER_MODE > 6:
     UB_TIMER_MODE = 2
-# MM_TIMER_MIN = get_float('app_config', 'MM_TIMER_MIN', 0.0)
+TICK_TIMER = get_int('app_config', 'TICK_TIMER', 5)
 # SWING_TF = get_int('app_config', 'SWING_TF', 5)
 # SWING_TEST = get_int('app_config', 'SWING_TEST', 2)
 # TP_FIBO = get_int('app_config', 'TP_FIBO', 2)
