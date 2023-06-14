@@ -77,6 +77,7 @@ config.readfp(config_file)
 LOGIN = get_str('mt5','login')
 PASSWORD = get_str('mt5','password')
 SERVER = get_str('mt5','server')
+PATH = get_str('mt5','path')
 
 #------------------------------------------------------------
 # line
