@@ -303,7 +303,7 @@ def set_indicator(symbol, bars, config=indicator_config):
 
     except Exception as ex:
         print(type(ex).__name__, symbol, str(ex))
-        logger.error(ex)
+        logger.exception(f'set_indicator - {symbol}')
 
     return df
 
@@ -337,6 +337,7 @@ async def fetch_ohlcv(exchange, symbol, timeframe, limit=CANDLE_LIMIT, timestamp
             all_candles[symbol] = set_indicator(symbol, ohlcv_bars, config=config)
     except Exception as ex:
         print(type(ex).__name__, symbol, str(ex))
+        logger.exception(f'fetch_ohlcv - {symbol}')
         if limit == 0 and symbol in all_candles.keys():
             print('----->', timestamp, last_candle_time, timestamp-last_candle_time, round(1.5+(timestamp-last_candle_time)/timeframe_secs))
         # if '"code":-1130' in str(ex):
@@ -540,5 +541,6 @@ async def chart(symbol, timeframe, config=indicator_config, showMACDRSI=False, f
 
     except Exception as ex:
         print(type(ex).__name__, symbol, str(ex))
+        logger.exception(f'chart - {symbol}')
 
     return filename

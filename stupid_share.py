@@ -97,7 +97,6 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
                 if tp == 0.0 and entryPrice < fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = minimum_price + difference * fibo_values[tp_fibo]
-                    break
         else:
             # maxidx = np.where(iday_minmax.index==maximum_index)[0][0]
             maxidx = iday_minmax.index.get_loc(maximum_index)
@@ -117,7 +116,6 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
                 if tp == 0.0 and entryPrice < fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = new_minimum_price + difference * fibo_values[tp_fibo]
-                    break
 
         sl_fibo = entryPrice - difference * fibo_values[1]
         sl_sw = min(swing_lows[-SWING_TEST:])
@@ -136,7 +134,6 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
                 if tp == 0.0 and entryPrice > fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = maximum_price - difference * fibo_values[tp_fibo]
-                    break
         else:
             # minidx = np.where(iday_minmax.index==minimum_index)[0][0]
             minidx = iday_minmax.index.get_loc(minimum_index)
@@ -156,7 +153,6 @@ def cal_minmax_fibo(symbol, df, positionType=Direction.LONG, entryPrice=0.0, dig
                 if tp == 0.0 and entryPrice > fibo_level:
                     tp_fibo = min(idx+TP_FIBO, len(fibo_values)-1)
                     tp = new_maximum_price - difference * fibo_values[tp_fibo]
-                    break
 
         sl_fibo = entryPrice + difference * fibo_values[1]
         sl_sw = max(swing_highs[-SWING_TEST:])
