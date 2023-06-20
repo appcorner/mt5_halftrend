@@ -382,13 +382,13 @@ def cal_martingal_lot(symbol):
     cal_lot = config.lot
     if config.is_martingale and config.martingale_max > 0:
         if all_stat[symbol]["last_loss"] < config.martingale_max:
-            if config.martingale_factor == 1:
-                cal_lot = round(config.lot * (all_stat[symbol]["last_loss"]+1), 2)
+            if config.martingale_factor <= 1:
+                cal_lot = round(config.lot * config.martingale_factor * (all_stat[symbol]["last_loss"]+1), 2)
             else:
                 cal_lot = round(config.lot * (config.martingale_factor ** all_stat[symbol]["last_loss"]), 2)
         else:
-            if config.martingale_factor == 1:
-                cal_lot = round(config.lot * config.martingale_max, 2)
+            if config.martingale_factor <= 1:
+                cal_lot = round(config.lot * config.martingale_factor * config.martingale_max, 2)
             else:
                 cal_lot = round(config.lot * (config.martingale_factor ** config.martingale_max), 2)
     return cal_lot
