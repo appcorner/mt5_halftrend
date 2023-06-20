@@ -8,7 +8,7 @@ open forex order by halftrend signal
 - ผู้พัฒนาไม่สามารถรับผิดชอบ ความเสียหายที่เกิดจาก การใช้งาน บัค error หรือ อื่นๆ ได้ ผู้ใช้โปรแกรมต้องยอมรับความเสี่ยงที่เกิดขึ้นเอง โดย ทดลอง ทดสอบ ให้มั่นใจก่อนนำไปใช้ในการลงทุน
 - ผู้พัฒนาไม่อนุญาติให้นำโปรแกรมไปแสวงหาผลประโยชน์จากบุคคลอื่น หากทราบ จะหยุดการพัฒนาและเผยแพร่โปรแกรมโดยทันที
 
-## V1.0.4
+## V1.0.5, V1.0.4
 - แก้บัค ><
 
 ## V1.0.3
@@ -29,6 +29,8 @@ open forex order by halftrend signal
     login = 
     password = 
     server = 
+    ;# ระบุ path ของ terminal.exe ของ MT5 ที่ติดตั้งไว้
+    ; path = D:\mt5_terminal\FBS_02\terminal64.exe
 
     [line]
     notify_token = 
@@ -57,23 +59,23 @@ open forex order by halftrend signal
     amplitude = 3
     channel_deviation = 2
 
-    ;check สัญญาณ macd ก่อนเปิด order default = on
+    ;# check สัญญาณ macd ก่อนเปิด order default = on
     ; confirm_macd = off
 
-    ;เพิ่มการเปิด order ด้วยสัญญาน macd cross (MACD ตัด MACDs) default = off
+    ;# เพิ่มการเปิด order ด้วยสัญญาน macd cross (MACD ตัด MACDs) default = off
     ; macd_cross = on
 
     martingale_mode = on
     martingale_factor = 1.0
     martingale_max = 16
-    ;ถ้า martingale_factor > 1.0 จะเป็นการเพิ่ม lot ตามเทคนิค martingale (ทวีคูณ)
+    ;# ถ้า martingale_factor > 1.0 จะเป็นการเพิ่ม lot ตามเทคนิค martingale (ทวีคูณ)
     ;martingale_factor = 2.0
     ;martingale_max = 8
 
-    auto_tpsl = on
+    auto_tpsl = off
     sl = 150
     tp = 300
-    ;สามารถกำหนดค่าเป็นเปอร์เซ็นต์ได้
+    ;# สามารถกำหนดค่าเป็นเปอร์เซ็นต์ได้
     ;sl = 0.7%
     ;tp = 1.2%
 
